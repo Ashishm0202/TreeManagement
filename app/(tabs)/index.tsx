@@ -12,6 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Colors } from "@/constants/colors";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTrees } from "@/contexts/TreeContext";
 
@@ -41,6 +42,7 @@ const BENEFITS = [
 export default function HomeScreen() {
   const { username, logout } = useAuth();
   const { trees } = useTrees();
+  const contentPadding = useTabBarClearance(40);
   const ctaScale = useSharedValue(1);
   const ctaAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: ctaScale.value }],
@@ -103,7 +105,7 @@ export default function HomeScreen() {
 
       <ScrollView
         style={styles.body}
-        contentContainerStyle={styles.bodyContent}
+        contentContainerStyle={[styles.bodyContent, { paddingBottom: contentPadding }]}
         showsVerticalScrollIndicator={false}
       >
         <Animated.View entering={FadeInUp.delay(180).duration(500)}>

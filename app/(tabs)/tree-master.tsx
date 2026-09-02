@@ -29,6 +29,7 @@ import { TreeFormModal } from "@/components/TreeFormModal";
 import { TreeSuccessModal } from "@/components/TreeSuccessModal";
 import { Colors } from "@/constants/colors";
 import { useTrees } from "@/contexts/TreeContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { ApiError, GetTreeID } from "@/services/api";
 import type { Tree, TreeFormValues } from "@/types/tree";
 
@@ -45,6 +46,8 @@ export default function TreeMasterScreen() {
     deleteTree,
     revertTree,
   } = useTrees();
+  const contentPadding = useTabBarClearance(100);
+  const fabBottom = useTabBarClearance(FAB_BOTTOM_OFFSET);
   const [formVisible, setFormVisible] = useState(false);
   const [editingTree, setEditingTree] = useState<Tree | null>(null);
   const [claimedTree, setClaimedTree] = useState<Tree | null>(null);
@@ -274,7 +277,7 @@ export default function TreeMasterScreen() {
         <FlatList
           data={filteredTrees}
           keyExtractor={(item) => item.ID}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: contentPadding }]}
           showsVerticalScrollIndicator={false}
           renderItem={renderItem}
           initialNumToRender={12}
@@ -311,7 +314,7 @@ export default function TreeMasterScreen() {
 
       <Animated.View
         entering={ZoomIn.delay(300).duration(400).springify().damping(12)}
-        style={styles.fabWrap}
+        style={[styles.fabWrap, { bottom: fabBottom }]}
       >
         <Animated.View style={fabAnimatedStyle}>
           <Pressable
@@ -374,6 +377,8 @@ export default function TreeMasterScreen() {
   );
 }
 
+const FAB_BOTTOM_OFFSET = 68;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   header: {
@@ -435,7 +440,6 @@ const styles = StyleSheet.create({
   fabWrap: {
     position: "absolute",
     right: 22,
-    bottom: 28,
   },
   fab: {
     width: 58,

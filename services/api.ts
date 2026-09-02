@@ -1,4 +1,4 @@
-import type { GeneratedTreeId, GenrateTree, Tree } from "@/types/tree";
+import type { GeneratedTreeId, GenrateTree, GetTree, Tree } from "@/types/tree";
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
@@ -116,6 +116,15 @@ export async function getTrees(): Promise<Tree[]> {
 
   const list: Tree[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
   console.log(`[TreeManagement] Parsed ${list.length} tree(s).`);
+
+  return list;
+}
+
+export async function getTreeReport(): Promise<GetTree[]> {
+  const body = await request<any>("TreeManagement");
+
+  const list: GetTree[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+  console.log(`[TreeManagement] Report parsed ${list.length} row(s).`);
 
   return list;
 }

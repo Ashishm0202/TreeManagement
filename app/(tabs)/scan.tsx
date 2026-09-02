@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 
 import { Colors } from "@/constants/colors";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { getTreeDesignUrl } from "@/services/api";
 
 function resolveDesignUrl(scanned: string) {
@@ -24,6 +25,7 @@ function resolveDesignUrl(scanned: string) {
 
 export default function ScanScreen() {
   const isFocused = useIsFocused();
+  const manualCardMargin = useTabBarClearance(34);
   const [permission, requestPermission] = useCameraPermissions();
   const [manualId, setManualId] = useState("");
   const [pageUrl, setPageUrl] = useState<string | null>(null);
@@ -141,7 +143,7 @@ export default function ScanScreen() {
           </View>
         ) : null}
 
-        <View style={styles.manualCard}>
+        <View style={[styles.manualCard, { marginBottom: manualCardMargin }]}>
           <Text style={styles.manualLabel}>Or enter Tree ID / link manually</Text>
           <View style={styles.manualRow}>
             <TextInput

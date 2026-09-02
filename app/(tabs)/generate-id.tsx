@@ -22,12 +22,14 @@ import Animated, {
 import { GeneratedIdQrModal } from "@/components/GeneratedIdQrModal";
 import { Colors } from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { ApiError, GenrateTreeID } from "@/services/api";
 
 const MAX_QTY = 50;
 
 export default function GenerateIdScreen() {
   const { username } = useAuth();
+  const contentPadding = useTabBarClearance(40);
   const [quantity, setQuantity] = useState("1");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +183,7 @@ export default function GenerateIdScreen() {
         data={generatedIds}
         keyExtractor={(item, index) => `${item}-${index}`}
         renderItem={renderItem}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: contentPadding }]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           generatedIds.length > 0 ? (

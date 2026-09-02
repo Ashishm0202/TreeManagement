@@ -1,11 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
+import { GlassView } from "expo-glass-effect";
 import { router, Tabs, usePathname } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/colors";
+import { isGlassTabBar } from "@/constants/liquidGlass";
 
 export default function TabsLayout() {
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
   const isScanFocused = pathname === "/scan";
 
   return (
@@ -16,13 +20,38 @@ export default function TabsLayout() {
           tabBarActiveTintColor: Colors.primary,
           tabBarInactiveTintColor: Colors.textMuted,
           tabBarStyle: {
-            height: 64,
-            paddingBottom: 10,
+            // The bar's own height/padding are hardcoded, which overrides the
+            // inset padding bottom-tabs would otherwise apply — so the bottom
+            // safe area (home gesture bar) has to be added back by hand.
+            height: TAB_BAR_HEIGHT + insets.bottom,
+            paddingBottom: 10 + insets.bottom,
             paddingTop: 8,
-            borderTopWidth: 1,
-            borderTopColor: Colors.border,
-            backgroundColor: Colors.surface,
+            ...(isGlassTabBar
+              ? {
+                  // Float the bar so content scrolls beneath the glass, and
+                  // let GlassView below supply the whole background — a solid
+                  // colour or hairline border would sit on top of the effect.
+                  position: "absolute",
+                  backgroundColor: "transparent",
+                  borderTopWidth: 0,
+                }
+              : {
+                  borderTopWidth: 1,
+                  borderTopColor: Colors.border,
+                  backgroundColor: Colors.surface,
+                }),
           },
+          tabBarBackground: isGlassTabBar
+            ? () => (
+                <GlassView
+                  style={StyleSheet.absoluteFill}
+                  glassEffectStyle="regular"
+                  // The app is light-themed throughout, so the glass should not
+                  // follow the system into dark mode.
+                  colorScheme="light"
+                />
+              )
+            : undefined,
           tabBarLabelStyle: {
             fontSize: 12,
             fontWeight: "600",
@@ -65,6 +94,19 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="ReportScreen"
+          options={{
+            title: "Report",
+            tabBarIcon: ({ color, size, focused }) => (
+              <Ionicons
+                name={focused ? "document-text" : "document-text-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="generate-id"
           options={{
             title: "Generate ID",
@@ -81,7 +123,7 @@ export default function TabsLayout() {
 
       <Pressable
         onPress={() => router.push("/scan")}
-        style={styles.scanButtonWrap}
+        style={[styles.scanButtonWrap, { bottom: SCAN_BUTTON_OFFSET + insets.bottom }]}
         hitSlop={8}
       >
         <View style={[styles.scanButton, isScanFocused && styles.scanButtonFocused]}>
@@ -92,11 +134,13 @@ export default function TabsLayout() {
   );
 }
 
+const TAB_BAR_HEIGHT = 64;
+const SCAN_BUTTON_OFFSET = 30;
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   scanButtonWrap: {
     position: "absolute",
-    bottom: 30,
     left: "50%",
     marginLeft: -28,
   },

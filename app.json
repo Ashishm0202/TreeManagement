@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aondigicon.TreeManagement"
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +27,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.ashishm02.TreeManagement"
+      "package": "com.aondigicon.TreeManagement"
     },
     "web": {
       "output": "static",
@@ -40,9 +41,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#F3FAF4",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#F3FAF4"
           }
         }
       ],
@@ -64,10 +65,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "36a9ae4b-2606-4639-a885-4ed63013bcc5"
-      }
+      "router": {}
     }
   }
 }
