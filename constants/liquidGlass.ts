@@ -1,3 +1,4 @@
+import * as Device from "expo-device";
 import { isGlassEffectAPIAvailable, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Platform } from "react-native";
 
@@ -6,6 +7,18 @@ function detectGlassSupport(): { enabled: boolean; reason: string } {
     return {
       enabled: false,
       reason: `${Platform.OS} has no Liquid Glass API — GlassView is a plain View here. Using the opaque bar.`,
+    };
+  }
+
+  // The Simulator answers yes to every availability check below but paints no
+  // material, so GlassView comes out as an empty view and the bar reads as
+  // fully see-through. Devices are unaffected, so this only costs the Simulator
+  // the (already designed) opaque bar.
+  if (!Device.isDevice) {
+    return {
+      enabled: false,
+      reason:
+        "iOS Simulator — the Liquid Glass API reports available but paints nothing, which leaves the bar see-through. Using the opaque bar. Run on a device to see the glass.",
     };
   }
 

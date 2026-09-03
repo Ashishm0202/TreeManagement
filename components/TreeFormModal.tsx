@@ -3,7 +3,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -69,6 +69,17 @@ export function TreeFormModal({
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isPickingDob, setIsPickingDob] = useState(false);
+
+  /**
+   * A tree that already has coordinates keeps them. The position is recorded
+   * once, standing at the tree; re-detecting it later from somewhere else would
+   * quietly move the tree. Coordinates of exactly 0 count as "never recorded",
+   * so rows saved before location capture existed can still be fixed.
+   */
+  const isLocationLocked = useMemo(() => {
+    const hasCoord = (value: number | null) => value != null && value !== 0;
+    return !!editingTree && hasCoord(editingTree.Lattitude) && hasCoord(editingTree.Longitude);
+  }, [editingTree]);
   const submitScale = useSharedValue(1);
   const submitAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: submitScale.value }],
@@ -194,11 +205,13 @@ export function TreeFormModal({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.sheetWrap}
-        >
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        // The avoider has to own the whole backdrop: sized to the sheet, it has
+        // no spare height to give up when the keyboard opens.
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.sheetWrap}>
           <View style={styles.sheet}>
             <View style={styles.handle} />
             <View style={styles.headerRow}>
@@ -220,6 +233,8 @@ export function TreeFormModal({
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+              contentContainerStyle={styles.scrollContent}
             >
               <Field
                 label="Tree Name"
@@ -233,22 +248,39 @@ export function TreeFormModal({
               <Pressable
                 style={({ pressed }) => [
                   styles.locationButton,
-                  pressed && styles.locationButtonPressed,
+                  pressed && !isLocationLocked && styles.locationButtonPressed,
+                  isLocationLocked && styles.locationButtonLocked,
                 ]}
                 onPress={fetchCurrentLocation}
-                disabled={locationStatus === "loading"}
+                disabled={isLocationLocked || locationStatus === "loading"}
               >
-                <View style={styles.locationButtonIconWrap}>
+                <View
+                  style={[
+                    styles.locationButtonIconWrap,
+                    isLocationLocked && styles.locationButtonIconWrapLocked,
+                  ]}
+                >
                   {locationStatus === "loading" ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
-                    <Ionicons name="locate" size={26} color="#FFFFFF" />
+                    <Ionicons
+                      name={isLocationLocked ? "lock-closed" : "locate"}
+                      size={isLocationLocked ? 20 : 26}
+                      color="#FFFFFF"
+                    />
                   )}
                 </View>
-                <Text style={styles.locationButtonText}>
-                  {locationStatus === "loading"
-                    ? "Fetching current location..."
-                    : "Use My Current Location"}
+                <Text
+                  style={[
+                    styles.locationButtonText,
+                    isLocationLocked && styles.locationButtonTextLocked,
+                  ]}
+                >
+                  {isLocationLocked
+                    ? "Location already recorded for this tree"
+                    : locationStatus === "loading"
+                      ? "Fetching current location..."
+                      : "Use My Current Location"}
                 </Text>
               </Pressable>
               {locationError ? (
@@ -260,20 +292,22 @@ export function TreeFormModal({
                   <Field
                     label="Latitude"
                     icon="navigate-outline"
-                    placeholder="e.g. 28.613900"
+                    placeholder="Detected"
                     value={form.Lattitude}
                     onChangeText={(v) => setField("Lattitude", v)}
                     keyboardType="numeric"
+                    readOnly
                   />
                 </View>
                 <View style={styles.half}>
                   <Field
                     label="Longitude"
                     icon="navigate-outline"
-                    placeholder="e.g. 77.209000"
+                    placeholder="Detected"
                     value={form.Longitude}
                     onChangeText={(v) => setField("Longitude", v)}
                     keyboardType="numeric"
+                    readOnly
                   />
                 </View>
               </View>
@@ -406,8 +440,8 @@ export function TreeFormModal({
               </Pressable>
             </Animated.View>
           </View>
-        </KeyboardAvoidingView>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -422,6 +456,8 @@ interface FieldProps {
   multiline?: boolean;
   numberOfLines?: number;
   keyboardType?: "default" | "numeric";
+  /** Shown, but filled in by the app rather than typed. */
+  readOnly?: boolean;
 }
 
 function Field({
@@ -434,6 +470,7 @@ function Field({
   multiline,
   numberOfLines,
   keyboardType = "default",
+  readOnly,
 }: FieldProps) {
   return (
     <View style={styles.fieldWrap}>
@@ -442,6 +479,7 @@ function Field({
         style={[
           styles.inputGroup,
           multiline && styles.inputGroupMultiline,
+          readOnly && styles.inputGroupReadOnly,
           error && styles.inputGroupError,
         ]}
       >
@@ -452,11 +490,16 @@ function Field({
           style={multiline ? styles.multilineIcon : undefined}
         />
         <TextInput
-          style={[styles.input, multiline && styles.inputMultiline]}
+          style={[
+            styles.input,
+            multiline && styles.inputMultiline,
+            readOnly && styles.inputReadOnly,
+          ]}
           placeholder={placeholder}
           placeholderTextColor={Colors.textMuted}
           value={value}
           onChangeText={onChangeText}
+          editable={!readOnly}
           multiline={multiline}
           numberOfLines={numberOfLines}
           keyboardType={keyboardType}
@@ -475,6 +518,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheetWrap: { maxHeight: "90%" },
+  scrollContent: { paddingBottom: 8 },
   sheet: {
     backgroundColor: Colors.surface,
     borderTopLeftRadius: 28,
@@ -521,6 +565,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   locationButtonPressed: { opacity: 0.75 },
+  locationButtonLocked: {
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
+  },
   locationButtonIconWrap: {
     width: 40,
     height: 40,
@@ -529,7 +577,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  locationButtonIconWrapLocked: { width: 34, height: 34, borderRadius: 17, backgroundColor: Colors.textMuted },
   locationButtonText: { flex: 1, fontSize: 14.5, fontWeight: "700", color: Colors.primary },
+  locationButtonTextLocked: { fontSize: 13.5, fontWeight: "600", color: Colors.textMuted },
   locationErrorText: {
     fontSize: 11.5,
     color: Colors.danger,
@@ -568,6 +618,7 @@ const styles = StyleSheet.create({
   },
   multilineIcon: { marginTop: 2 },
   input: { flex: 1, fontSize: 14, color: Colors.text, height: "100%" },
+  inputReadOnly: { color: Colors.textMuted },
   inputMultiline: { height: undefined, minHeight: 60 },
   errorText: { fontSize: 11, color: Colors.danger, marginTop: 4, marginBottom: 10 },
   submitErrorText: {

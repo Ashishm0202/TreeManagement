@@ -79,10 +79,19 @@ export interface LoginResult {
 }
 
 export async function loginUser(username: string, password: string): Promise<LoginResult> {
+  // The password is masked rather than printed: console output ends up in
+  // device logs. Swap the mask for `password` if you need to verify it.
+  console.log(
+    "[LoginUser] POST payload:",
+    JSON.stringify({ username, password: "********" }, null, 2)
+  );
+
   const body = await request<any>("LoginUser/Login", {
     method: "POST",
     body: JSON.stringify({ username, password }),
   });
+
+  console.log("[LoginUser] POST response:", JSON.stringify(body, null, 2));
 
   if (typeof body === "string") {
     const normalized = body.trim().toUpperCase();
@@ -163,10 +172,14 @@ export async function GenrateTreeID(genratetreeid: GenrateTree): Promise<Generat
 
 /** Writes go up as a {@link Tree}; the API only accepts the camelCase shape. */
 export async function saveTree(tree: Tree): Promise<void> {
+  console.log("[TreeManagement] POST payload:", JSON.stringify(tree, null, 2));
+
   const body = await request<any>("TreeManagement", {
     method: "POST",
     body: JSON.stringify(tree),
   });
+
+  console.log("[TreeManagement] POST response:", JSON.stringify(body, null, 2));
 
   if (typeof body === "string" && body.trim().length > 0) {
     const normalized = body.trim().toUpperCase();

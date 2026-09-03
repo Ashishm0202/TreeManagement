@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -271,132 +272,142 @@ export default function LoginScreen() {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.flex}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          // Android gets "height": with edge-to-edge enabled the window is no
+          // longer resized for us, so the view has to give up the space itself.
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.brandWrap}>
-            <Animated.View
-              entering={ZoomIn.duration(700).springify().damping(12)}
-              style={styles.logoCircle}
-            >
-              <LinearGradient
-                colors={[Colors.primaryLight, Colors.primary]}
-                style={styles.logoGradient}
-              >
-                <Ionicons name="leaf" size={34} color="#FFFFFF" />
-              </LinearGradient>
-            </Animated.View>
-            <Animated.Text
-              entering={FadeInDown.delay(150).duration(500)}
-              style={styles.brandTitle}
-            >
-              Tree Management
-            </Animated.Text>
-            <Animated.Text
-              entering={FadeInDown.delay(230).duration(500)}
-              style={styles.brandSubtitle}
-            >
-              Track, protect &amp; nurture every tree
-            </Animated.Text>
-          </View>
-
-          <Animated.View
-            entering={FadeInUp.delay(280).duration(650).springify().damping(16)}
-            style={styles.card}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <View style={styles.cardAccent} />
-            <Text style={styles.cardTitle}>Welcome back 👋</Text>
-            <Text style={styles.cardSubtitle}>
-              Sign in to continue to your dashboard
-            </Text>
-
-            <AnimatedField
-              icon="person-outline"
-              placeholder="Username"
-              value={username}
-              onChangeText={setUsername}
-            />
-
-            <AnimatedField
-              icon="lock-closed-outline"
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              rightSlot={
-                <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={10}>
-                  <Ionicons
-                    name={showPassword ? "eye-off-outline" : "eye-outline"}
-                    size={19}
-                    color={Colors.textMuted}
-                  />
-                </Pressable>
-              }
-            />
-
-            <Pressable
-              style={styles.forgotLink}
-              onPress={() =>
-                Alert.alert(
-                  "Forgot password?",
-                  "Please contact your administrator to reset your password."
-                )
-              }
-              hitSlop={8}
-            >
-              <Text style={styles.forgotLinkText}>Forgot password?</Text>
-            </Pressable>
-
-            {error ? (
+            <View style={styles.brandWrap}>
               <Animated.View
-                style={[styles.errorBox, isOffline && styles.offlineBox, shakeStyle]}
-              >
-                <Ionicons
-                  name={isOffline ? "cloud-offline-outline" : "alert-circle-outline"}
-                  size={16}
-                  color={isOffline ? Colors.accent : Colors.danger}
-                />
-                <Text
-                  style={[styles.errorText, isOffline && styles.offlineText]}
-                >
-                  {error}
-                </Text>
-              </Animated.View>
-            ) : null}
-
-            <Animated.View style={buttonAnimatedStyle}>
-              <Pressable
-                style={styles.loginButton}
-                onPress={handleLogin}
-                onPressIn={() => {
-                  buttonScale.value = withTiming(0.96, { duration: 100 });
-                }}
-                onPressOut={() => {
-                  buttonScale.value = withTiming(1, { duration: 150 });
-                }}
-                disabled={submitting}
+                entering={ZoomIn.duration(700).springify().damping(12)}
+                style={styles.logoCircle}
               >
                 <LinearGradient
-                  colors={[Colors.primary, Colors.primaryDark]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.loginButtonGradient}
+                  colors={[Colors.primaryLight, Colors.primary]}
+                  style={styles.logoGradient}
                 >
-                  <Animated.View style={[styles.shimmer, shimmerStyle]} />
-                  <Text style={styles.loginButtonText}>
-                    {submitting ? "Signing in..." : "Sign In"}
-                  </Text>
-                  {!submitting && (
-                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                  )}
+                  <Ionicons name="leaf" size={34} color="#FFFFFF" />
                 </LinearGradient>
-              </Pressable>
-            </Animated.View>
-
-            <View style={styles.secureRow}>
-              <Ionicons name="shield-checkmark-outline" size={13} color={Colors.textMuted} />
-              <Text style={styles.secureText}>Secured sign-in</Text>
+              </Animated.View>
+              <Animated.Text
+                entering={FadeInDown.delay(150).duration(500)}
+                style={styles.brandTitle}
+              >
+                Tree Management
+              </Animated.Text>
+              <Animated.Text
+                entering={FadeInDown.delay(230).duration(500)}
+                style={styles.brandSubtitle}
+              >
+                Track, protect &amp; nurture every tree
+              </Animated.Text>
             </View>
-          </Animated.View>
+
+            <Animated.View
+              entering={FadeInUp.delay(280).duration(650).springify().damping(16)}
+              style={styles.card}
+            >
+              <View style={styles.cardAccent} />
+              <Text style={styles.cardTitle}>Welcome back 👋</Text>
+              <Text style={styles.cardSubtitle}>
+                Sign in to continue to your dashboard
+              </Text>
+
+              <AnimatedField
+                icon="person-outline"
+                placeholder="Username"
+                value={username}
+                onChangeText={setUsername}
+              />
+
+              <AnimatedField
+                icon="lock-closed-outline"
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                rightSlot={
+                  <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={10}>
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={19}
+                      color={Colors.textMuted}
+                    />
+                  </Pressable>
+                }
+              />
+
+              <Pressable
+                style={styles.forgotLink}
+                onPress={() =>
+                  Alert.alert(
+                    "Forgot password?",
+                    "Please contact your administrator to reset your password."
+                  )
+                }
+                hitSlop={8}
+              >
+                <Text style={styles.forgotLinkText}>Forgot password?</Text>
+              </Pressable>
+
+              {error ? (
+                <Animated.View
+                  style={[styles.errorBox, isOffline && styles.offlineBox, shakeStyle]}
+                >
+                  <Ionicons
+                    name={isOffline ? "cloud-offline-outline" : "alert-circle-outline"}
+                    size={16}
+                    color={isOffline ? Colors.accent : Colors.danger}
+                  />
+                  <Text
+                    style={[styles.errorText, isOffline && styles.offlineText]}
+                  >
+                    {error}
+                  </Text>
+                </Animated.View>
+              ) : null}
+
+              <Animated.View style={buttonAnimatedStyle}>
+                <Pressable
+                  style={styles.loginButton}
+                  onPress={handleLogin}
+                  onPressIn={() => {
+                    buttonScale.value = withTiming(0.96, { duration: 100 });
+                  }}
+                  onPressOut={() => {
+                    buttonScale.value = withTiming(1, { duration: 150 });
+                  }}
+                  disabled={submitting}
+                >
+                  <LinearGradient
+                    colors={[Colors.primary, Colors.primaryDark]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.loginButtonGradient}
+                  >
+                    <Animated.View style={[styles.shimmer, shimmerStyle]} />
+                    <Text style={styles.loginButtonText}>
+                      {submitting ? "Signing in..." : "Sign In"}
+                    </Text>
+                    {!submitting && (
+                      <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                    )}
+                  </LinearGradient>
+                </Pressable>
+              </Animated.View>
+
+              <View style={styles.secureRow}>
+                <Ionicons name="shield-checkmark-outline" size={13} color={Colors.textMuted} />
+                <Text style={styles.secureText}>Secured sign-in</Text>
+              </View>
+            </Animated.View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
@@ -408,7 +419,14 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safeArea: { flex: 1 },
-  flex: { flex: 1, justifyContent: "center", paddingHorizontal: 24 },
+  flex: { flex: 1 },
+  // Centred while it fits, scrollable once the keyboard squeezes it.
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
   blob: {
     position: "absolute",
     borderRadius: 999,

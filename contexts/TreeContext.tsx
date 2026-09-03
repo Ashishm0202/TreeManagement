@@ -62,6 +62,15 @@ function toTreePayload(
   };
 }
 
+/**
+ * Single exit for every write, so the exact body going to the API is visible in
+ * the console alongside the action that produced it.
+ */
+async function logAndSave(action: string, payload: Tree) {
+  console.log(`[TreeContext] ${action} payload:`, JSON.stringify(payload, null, 2));
+  await saveTree(payload);
+}
+
 /** The row as it stands, resent with a different delete flag. */
 function toFlagPayload(tree: GetTree, username: string | null, delFlag: number): Tree {
   return {
@@ -127,7 +136,7 @@ export function TreeProvider({ children }: { children: ReactNode }) {
 
   const addTree = useCallback(
     async (input: TreeFormValues) => {
-      await saveTree(toTreePayload({}, input, username));
+      await logAndSave("Add tree", toTreePayload({}, input, username));
       await refresh();
     },
     [username, refresh]
@@ -135,7 +144,7 @@ export function TreeProvider({ children }: { children: ReactNode }) {
 
   const updateTree = useCallback(
     async (tree: GetTree, input: TreeFormValues) => {
-      await saveTree(toTreePayload(tree, input, username));
+      await logAndSave("Edit tree", toTreePayload(tree, input, username));
       await refresh();
     },
     [username, refresh]
@@ -143,7 +152,7 @@ export function TreeProvider({ children }: { children: ReactNode }) {
 
   const deleteTree = useCallback(
     async (tree: GetTree) => {
-      await saveTree(toFlagPayload(tree, username, 1));
+      await logAndSave("Delete tree", toFlagPayload(tree, username, 1));
       await refresh();
     },
     [username, refresh]
@@ -151,7 +160,7 @@ export function TreeProvider({ children }: { children: ReactNode }) {
 
   const revertTree = useCallback(
     async (tree: GetTree) => {
-      await saveTree(toFlagPayload(tree, username, 0));
+      await logAndSave("Revert tree", toFlagPayload(tree, username, 0));
       await refresh();
     },
     [username, refresh]

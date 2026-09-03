@@ -42,12 +42,12 @@ export function toDateInputFromDate(date: Date): string {
 }
 
 /**
- * Form string → what goes on the wire. The time is pinned to midnight with no
- * zone suffix so the server stores the day that was picked, not a shifted one.
+ * Form string → what goes on the wire: the bare calendar day, "2026-09-03".
+ * No time and no zone suffix, so the server stores the day that was picked
+ * rather than one shifted by the device's offset.
  */
 export function toApiDate(value: string | null | undefined): string | null {
-  const day = toDateInput(value);
-  return day ? `${day}T00:00:00` : null;
+  return toDateInput(value) || null;
 }
 
 /** Form string → "12 Mar 2019" for display. */
