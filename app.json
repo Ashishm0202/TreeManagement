@@ -58,14 +58,18 @@
         {
           "cameraPermission": "Allow Tree Management to use your camera to scan a tree's QR code."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "c841a337-770c-4cd5-b9b6-6b441b9594f5"
+      }
     }
   }
 }

@@ -3,14 +3,14 @@ import { memo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Colors } from "@/constants/colors";
-import type { Tree } from "@/types/tree";
+import type { GetTree } from "@/types/tree";
 
 interface TreeCardProps {
-  tree: Tree;
-  onEdit: (tree: Tree) => void;
-  onDelete: (tree: Tree) => void;
-  onShowQr: (tree: Tree) => void;
-  onRevert: (tree: Tree) => void;
+  tree: GetTree;
+  onEdit: (tree: GetTree) => void;
+  onDelete: (tree: GetTree) => void;
+  onShowQr: (tree: GetTree) => void;
+  onRevert: (tree: GetTree) => void;
   isReverting?: boolean;
 }
 
@@ -40,7 +40,7 @@ function TreeCardComponent({
             style={[styles.name, isDeleted && styles.nameDeleted]}
             numberOfLines={1}
           >
-            {tree.TreeName}
+            {tree.TreeName ?? "Unnamed tree"}
           </Text>
           {tree.TreeID ? (
             <View style={styles.idBadge}>
@@ -58,7 +58,7 @@ function TreeCardComponent({
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={13} color={Colors.textMuted} />
           <Text style={styles.location}>
-            {tree.Lattitude}, {tree.Longitude}
+            {tree.Lattitude ?? "--"}, {tree.Longitude ?? "--"}
           </Text>
         </View>
         {tree.TreeDesc ? (

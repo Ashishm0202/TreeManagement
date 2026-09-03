@@ -1,19 +1,21 @@
 export interface Tree {
-  ID: string;
-  TreeID: string;
-  TreeName: string;
-  TreeDesc: string;
-  Age: number;
-  LongDesc: string;
-  Lattitude: number;
-  Longitude: number;
-  Radius: number;
-  CreatedBy: string;
-  CreatedOn: string;
-  UpdatedBy: string | null;
-  UpdatedOn: string | null;
-  DelFlag: number;
+  id: string;
+  treeID: string;
+  treeName: string;
+  treeDesc: string;
+  dob: string | null;
+  age: number;
+  longDesc: string;
+  lattitude: number;
+  longitude: number;
+  radius: number;
+  createdBy: string;
+  createdOn: string;
+  updatedBy: string | null;
+  updatedOn: string | null;
+  delFlag: number;
 }
+
 export interface GenrateTree {
   qty: number;
   by: string;
@@ -26,6 +28,9 @@ export type TreeFormValues = {
   TreeName: string;
   TreeDesc: string;
   LongDesc: string;
+  /** Calendar day, "YYYY-MM-DD". Empty when the tree has no recorded DOB. */
+  Dob: string;
+  /** Derived from {@link TreeFormValues.Dob} — never entered by hand. */
   Age: string;
   Radius: string;
   Lattitude: string;

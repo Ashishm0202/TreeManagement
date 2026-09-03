@@ -110,11 +110,11 @@ export function getTreeDesignUrl(treeID: string): string {
   return `${BASE_URL}TreeManagement/design/${treeID}`;
 }
 
-export async function getTrees(): Promise<Tree[]> {
+export async function getTrees(): Promise<GetTree[]> {
   const body = await request<any>("TreeManagement");
   console.log("[TreeManagement] GET response:", JSON.stringify(body, null, 2));
 
-  const list: Tree[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+  const list: GetTree[] = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
   console.log(`[TreeManagement] Parsed ${list.length} tree(s).`);
 
   return list;
@@ -129,7 +129,7 @@ export async function getTreeReport(): Promise<GetTree[]> {
   return list;
 }
 
-export async function GetTreeID(treeID: string): Promise<Tree> {
+export async function GetTreeID(treeID: string): Promise<GetTree> {
   const body = await request<any>(`TreeManagement/TreeID/${treeID}`);
 
   const tree = Array.isArray(body) ? body[0] : body;
@@ -138,7 +138,7 @@ export async function GetTreeID(treeID: string): Promise<Tree> {
     throw new ApiError(`Tree ID "${treeID}" wasn't found.`);
   }
 
-  return tree as Tree;
+  return tree as GetTree;
 }
 
 export async function GenrateTreeID(genratetreeid: GenrateTree): Promise<GeneratedTreeId[]> {
@@ -161,6 +161,7 @@ export async function GenrateTreeID(genratetreeid: GenrateTree): Promise<Generat
   return [];
 }
 
+/** Writes go up as a {@link Tree}; the API only accepts the camelCase shape. */
 export async function saveTree(tree: Tree): Promise<void> {
   const body = await request<any>("TreeManagement", {
     method: "POST",

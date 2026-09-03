@@ -8,10 +8,10 @@ import { captureRef } from "react-native-view-shot";
 
 import { Colors } from "@/constants/colors";
 import { getTreeDesignUrl } from "@/services/api";
-import type { Tree } from "@/types/tree";
+import type { GetTree } from "@/types/tree";
 
 interface QRCodeModalProps {
-  tree: Tree | null;
+  tree: GetTree | null;
   onClose: () => void;
 }
 
@@ -43,7 +43,7 @@ export function QRCodeModal({ tree, onClose }: QRCodeModalProps) {
 
       await Sharing.shareAsync(uri, {
         mimeType: "image/png",
-        dialogTitle: `Share ${tree.TreeName} QR Code`,
+        dialogTitle: `Share ${tree.TreeName ?? "tree"} QR Code`,
         UTI: "public.png",
       });
     } catch {
@@ -73,7 +73,7 @@ export function QRCodeModal({ tree, onClose }: QRCodeModalProps) {
             <View style={styles.iconWrap}>
               <MaterialCommunityIcons name="tree" size={22} color={Colors.primary} />
             </View>
-            <Text style={styles.title}>{tree.TreeName}</Text>
+            <Text style={styles.title}>{tree.TreeName ?? "Unnamed tree"}</Text>
             {tree.TreeID ? <Text style={styles.idText}>ID: {tree.TreeID}</Text> : null}
 
             <Animated.View
@@ -91,7 +91,7 @@ export function QRCodeModal({ tree, onClose }: QRCodeModalProps) {
             <View style={styles.locationRow}>
               <Ionicons name="location" size={12} color={Colors.textMuted} />
               <Text style={styles.locationText}>
-                {tree.Lattitude}, {tree.Longitude}
+                {tree.Lattitude ?? "--"}, {tree.Longitude ?? "--"}
               </Text>
             </View>
           </View>

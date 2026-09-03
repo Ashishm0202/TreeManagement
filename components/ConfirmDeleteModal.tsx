@@ -3,10 +3,10 @@ import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "rea
 import Animated, { FadeInUp, ZoomIn } from "react-native-reanimated";
 
 import { Colors } from "@/constants/colors";
-import type { Tree } from "@/types/tree";
+import type { GetTree } from "@/types/tree";
 
 interface ConfirmDeleteModalProps {
-  tree: Tree | null;
+  tree: GetTree | null;
   isDeleting?: boolean;
   errorMessage?: string | null;
   onCancel: () => void;
@@ -45,7 +45,7 @@ export function ConfirmDeleteModal({
 
           <Text style={styles.title}>Delete this tree?</Text>
           <Text style={styles.message}>
-            <Text style={styles.treeName}>{tree.TreeName}</Text> will be
+            <Text style={styles.treeName}>{tree.TreeName ?? "This tree"}</Text> will be
             permanently removed from the tree master, along with its saved
             location and details. This can&apos;t be undone.
           </Text>

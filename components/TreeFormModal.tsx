@@ -1,3 +1,6 @@
+import DateTimePicker, {
+  type DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useCallback, useEffect, useState } from "react";
@@ -20,14 +23,21 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { Colors } from "@/constants/colors";
-import type { Tree, TreeFormValues } from "@/types/tree";
+import { toFormValues } from "@/contexts/TreeContext";
+import type { GetTree, TreeFormValues } from "@/types/tree";
+import {
+  ageFromDob,
+  formatDateLabel,
+  parseDateInput,
+  toDateInputFromDate,
+} from "@/utils/date";
 
 type LocationStatus = "idle" | "loading" | "error";
 
 interface TreeFormModalProps {
   visible: boolean;
-  editingTree: Tree | null;
-  claimedTree?: Tree | null;
+  editingTree: GetTree | null;
+  claimedTree?: GetTree | null;
   isSubmitting?: boolean;
   submitError?: string | null;
   onClose: () => void;
@@ -38,6 +48,7 @@ const emptyForm: TreeFormValues = {
   TreeName: "",
   TreeDesc: "",
   LongDesc: "",
+  Dob: "",
   Age: "",
   Radius: "",
   Lattitude: "",
@@ -57,6 +68,7 @@ export function TreeFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [locationStatus, setLocationStatus] = useState<LocationStatus>("idle");
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [isPickingDob, setIsPickingDob] = useState(false);
   const submitScale = useSharedValue(1);
   const submitAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: submitScale.value }],
@@ -112,23 +124,32 @@ export function TreeFormModal({
   useEffect(() => {
     if (!visible) return;
 
-    setForm(
-      editingTree
-        ? {
-            TreeName: editingTree.TreeName,
-            TreeDesc: editingTree.TreeDesc,
-            LongDesc: editingTree.LongDesc,
-            Age: editingTree.Age != null ? String(editingTree.Age) : "",
-            Radius: editingTree.Radius != null ? String(editingTree.Radius) : "",
-            Lattitude: String(editingTree.Lattitude),
-            Longitude: String(editingTree.Longitude),
-          }
-        : emptyForm
-    );
+    setForm(editingTree ? toFormValues(editingTree) : emptyForm);
     setErrors({});
     setLocationStatus("idle");
     setLocationError(null);
+    setIsPickingDob(false);
   }, [visible, editingTree]);
+
+  // Age is never typed in: picking a date is what sets it, always against today.
+  const applyDob = useCallback((day: string) => {
+    setForm((prev) => ({
+      ...prev,
+      Dob: day,
+      Age: day ? String(ageFromDob(day) ?? "") : "",
+    }));
+    setErrors((prev) => ({ ...prev, Dob: "" }));
+  }, []);
+
+  const handleDobChange = useCallback(
+    (event: DateTimePickerEvent, date?: Date) => {
+      // Android puts the picker in a system dialog that owns its own dismissal;
+      // on iOS it is inline, so it stays until the field is tapped again.
+      if (Platform.OS === "android") setIsPickingDob(false);
+      if (event.type === "set" && date) applyDob(toDateInputFromDate(date));
+    },
+    [applyDob]
+  );
 
   const setField = (key: keyof TreeFormValues, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -149,10 +170,6 @@ export function TreeFormModal({
       nextErrors.location = "Location isn't available yet. Please retry detection.";
     }
 
-    if (form.Age.trim() && Number.isNaN(Number(form.Age))) {
-      nextErrors.Age = "Age must be a number.";
-    }
-
     if (form.Radius.trim() && Number.isNaN(Number(form.Radius))) {
       nextErrors.Radius = "Radius must be a number.";
     }
@@ -167,6 +184,7 @@ export function TreeFormModal({
       TreeName: form.TreeName.trim(),
       TreeDesc: form.TreeDesc.trim(),
       LongDesc: form.LongDesc.trim(),
+      Dob: form.Dob,
       Age: form.Age.trim(),
       Radius: form.Radius.trim(),
       Lattitude: form.Lattitude.trim(),
@@ -263,17 +281,62 @@ export function TreeFormModal({
                 <Text style={styles.errorText}>{errors.location}</Text>
               ) : null}
 
+              <View style={styles.fieldWrap}>
+                <Text style={styles.fieldLabel}>Date of Birth</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.inputGroup,
+                    pressed && styles.inputGroupPressed,
+                  ]}
+                  onPress={() => setIsPickingDob((open) => !open)}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={Colors.textMuted} />
+                  <Text
+                    style={[styles.valueText, !form.Dob && styles.valuePlaceholder]}
+                    numberOfLines={1}
+                  >
+                    {form.Dob ? formatDateLabel(form.Dob) : "Select the planting date"}
+                  </Text>
+                  {form.Dob ? (
+                    <Pressable onPress={() => applyDob("")} hitSlop={10}>
+                      <Ionicons name="close-circle" size={18} color={Colors.textMuted} />
+                    </Pressable>
+                  ) : (
+                    <Ionicons name="chevron-down" size={16} color={Colors.textMuted} />
+                  )}
+                </Pressable>
+              </View>
+
+              {isPickingDob ? (
+                <View style={Platform.OS === "ios" ? styles.iosPickerWrap : undefined}>
+                  <DateTimePicker
+                    value={parseDateInput(form.Dob) ?? new Date()}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "inline" : "default"}
+                    maximumDate={new Date()}
+                    accentColor={Platform.OS === "ios" ? Colors.primary : undefined}
+                    onChange={handleDobChange}
+                  />
+                </View>
+              ) : null}
+
               <View style={styles.row}>
                 <View style={styles.half}>
-                  <Field
-                    label="Age (years)"
-                    icon="calendar-outline"
-                    placeholder="e.g. 5"
-                    value={form.Age}
-                    onChangeText={(v) => setField("Age", v)}
-                    keyboardType="numeric"
-                    error={errors.Age}
-                  />
+                  <View style={styles.fieldWrap}>
+                    <Text style={styles.fieldLabel}>Age (years)</Text>
+                    <View style={[styles.inputGroup, styles.inputGroupReadOnly]}>
+                      <Ionicons name="time-outline" size={18} color={Colors.textMuted} />
+                      <Text
+                        style={[styles.valueText, !form.Age && styles.valuePlaceholder]}
+                        numberOfLines={1}
+                      >
+                        {form.Age
+                          ? `${form.Age} ${form.Age === "1" ? "year" : "years"}`
+                          : "Set a date of birth"}
+                      </Text>
+                      <Ionicons name="lock-closed" size={13} color={Colors.textMuted} />
+                    </View>
+                  </View>
                 </View>
                 <View style={styles.half}>
                   <Field
@@ -488,6 +551,21 @@ const styles = StyleSheet.create({
   },
   inputGroupMultiline: { height: undefined, alignItems: "flex-start", paddingVertical: 10 },
   inputGroupError: { borderColor: Colors.danger },
+  inputGroupPressed: { borderColor: Colors.primaryLight, backgroundColor: Colors.primarySoft },
+  // Derived, not typed: flat fill and no focus affordance, so it doesn't invite
+  // a tap the way the editable fields do.
+  inputGroupReadOnly: { backgroundColor: Colors.border, borderColor: Colors.border },
+  valueText: { flex: 1, fontSize: 14, color: Colors.text },
+  valuePlaceholder: { color: Colors.textMuted },
+  iosPickerWrap: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 14,
+    backgroundColor: Colors.background,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    marginBottom: 14,
+  },
   multilineIcon: { marginTop: 2 },
   input: { flex: 1, fontSize: 14, color: Colors.text, height: "100%" },
   inputMultiline: { height: undefined, minHeight: 60 },

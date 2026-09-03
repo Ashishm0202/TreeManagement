@@ -11,53 +11,84 @@ import {
 
 import { useAuth } from "@/contexts/AuthContext";
 import { ApiError, getTrees, saveTree } from "@/services/api";
-import type { Tree, TreeFormValues } from "@/types/tree";
+import type { GetTree, Tree, TreeFormValues } from "@/types/tree";
+import { ageFromDob, toApiDate, toDateInput } from "@/utils/date";
 
 const TREES_CACHE_KEY = "tree-management:trees-cache";
 const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
 interface TreeContextValue {
-  trees: Tree[];
+  trees: GetTree[];
   isLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
   isOffline: boolean;
   refresh: () => Promise<void>;
   addTree: (input: TreeFormValues) => Promise<void>;
-  updateTree: (tree: Tree, input: TreeFormValues) => Promise<void>;
-  deleteTree: (tree: Tree) => Promise<void>;
-  revertTree: (tree: Tree) => Promise<void>;
+  updateTree: (tree: GetTree, input: TreeFormValues) => Promise<void>;
+  deleteTree: (tree: GetTree) => Promise<void>;
+  revertTree: (tree: GetTree) => Promise<void>;
 }
 
 const TreeContext = createContext<TreeContextValue | undefined>(undefined);
 
+/**
+ * The API hands rows back in PascalCase (`GetTree`) but only accepts camelCase
+ * on the way in (`Tree`), so every write is funnelled through here — the two
+ * shapes are never allowed to mix.
+ */
 function toTreePayload(
-  base: Partial<Tree>,
+  base: Partial<GetTree>,
   input: TreeFormValues,
   username: string | null
 ): Tree {
   const now = new Date().toISOString();
   return {
-    ID: base.ID ?? EMPTY_GUID,
-    TreeID: base.TreeID ?? "",
-    TreeName: input.TreeName,
-    TreeDesc: input.TreeDesc,
-    LongDesc: input.LongDesc,
-    Age: Number(input.Age) || 0,
-    Lattitude: Number(input.Lattitude) || 0,
-    Longitude: Number(input.Longitude) || 0,
-    Radius: Number(input.Radius) || 0,
-    CreatedBy: base.CreatedBy ?? username ?? "app",
-    CreatedOn: base.CreatedOn ?? now,
-    UpdatedBy: username ?? "app",
-    UpdatedOn: now,
-    DelFlag: 0,
+    id: base.ID ?? EMPTY_GUID,
+    treeID: base.TreeID ?? "",
+    treeName: input.TreeName,
+    treeDesc: input.TreeDesc,
+    dob: toApiDate(input.Dob),
+    age: Number(input.Age) || 0,
+    longDesc: input.LongDesc,
+    lattitude: Number(input.Lattitude) || 0,
+    longitude: Number(input.Longitude) || 0,
+    radius: Number(input.Radius) || 0,
+    createdBy: base.CreatedBy ?? username ?? "app",
+    createdOn: base.CreatedOn ?? now,
+    updatedBy: username ?? "app",
+    updatedOn: now,
+    delFlag: base.DelFlag ?? 0,
+  };
+}
+
+/** The row as it stands, resent with a different delete flag. */
+function toFlagPayload(tree: GetTree, username: string | null, delFlag: number): Tree {
+  return {
+    ...toTreePayload(tree, toFormValues(tree), username),
+    delFlag,
+  };
+}
+
+/** A fetched row narrowed down to the fields the form and the API care about. */
+export function toFormValues(tree: GetTree): TreeFormValues {
+  return {
+    TreeName: tree.TreeName ?? "",
+    TreeDesc: tree.TreeDesc ?? "",
+    LongDesc: tree.LongDesc ?? "",
+    Dob: toDateInput(tree.Dob),
+    // Recomputed against today, so a row saved years ago doesn't carry a stale
+    // age back up to the server. Rows with no DOB keep whatever was stored.
+    Age: String(ageFromDob(tree.Dob) ?? tree.Age ?? ""),
+    Radius: tree.Radius != null ? String(tree.Radius) : "",
+    Lattitude: tree.Lattitude != null ? String(tree.Lattitude) : "",
+    Longitude: tree.Longitude != null ? String(tree.Longitude) : "",
   };
 }
 
 export function TreeProvider({ children }: { children: ReactNode }) {
   const { username } = useAuth();
-  const [trees, setTrees] = useState<Tree[]>([]);
+  const [trees, setTrees] = useState<GetTree[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +134,7 @@ export function TreeProvider({ children }: { children: ReactNode }) {
   );
 
   const updateTree = useCallback(
-    async (tree: Tree, input: TreeFormValues) => {
+    async (tree: GetTree, input: TreeFormValues) => {
       await saveTree(toTreePayload(tree, input, username));
       await refresh();
     },
@@ -111,26 +142,16 @@ export function TreeProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteTree = useCallback(
-    async (tree: Tree) => {
-      await saveTree({
-        ...tree,
-        DelFlag: 1,
-        UpdatedBy: username ?? "app",
-        UpdatedOn: new Date().toISOString(),
-      });
+    async (tree: GetTree) => {
+      await saveTree(toFlagPayload(tree, username, 1));
       await refresh();
     },
     [username, refresh]
   );
 
   const revertTree = useCallback(
-    async (tree: Tree) => {
-      await saveTree({
-        ...tree,
-        DelFlag: 0,
-        UpdatedBy: username ?? "app",
-        UpdatedOn: new Date().toISOString(),
-      });
+    async (tree: GetTree) => {
+      await saveTree(toFlagPayload(tree, username, 0));
       await refresh();
     },
     [username, refresh]

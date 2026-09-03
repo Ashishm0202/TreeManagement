@@ -31,7 +31,7 @@ import { Colors } from "@/constants/colors";
 import { useTrees } from "@/contexts/TreeContext";
 import { useTabBarClearance } from "@/hooks/useTabBarClearance";
 import { ApiError, GetTreeID } from "@/services/api";
-import type { Tree, TreeFormValues } from "@/types/tree";
+import type { GetTree, TreeFormValues } from "@/types/tree";
 
 export default function TreeMasterScreen() {
   const {
@@ -49,12 +49,12 @@ export default function TreeMasterScreen() {
   const contentPadding = useTabBarClearance(100);
   const fabBottom = useTabBarClearance(FAB_BOTTOM_OFFSET);
   const [formVisible, setFormVisible] = useState(false);
-  const [editingTree, setEditingTree] = useState<Tree | null>(null);
-  const [claimedTree, setClaimedTree] = useState<Tree | null>(null);
+  const [editingTree, setEditingTree] = useState<GetTree | null>(null);
+  const [claimedTree, setClaimedTree] = useState<GetTree | null>(null);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [isLookingUpId, setIsLookingUpId] = useState(false);
-  const [qrTree, setQrTree] = useState<Tree | null>(null);
-  const [deletingTree, setDeletingTree] = useState<Tree | null>(null);
+  const [qrTree, setQrTree] = useState<GetTree | null>(null);
+  const [deletingTree, setDeletingTree] = useState<GetTree | null>(null);
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export default function TreeMasterScreen() {
   const filteredTrees = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return trees;
-    return trees.filter((tree) => tree.TreeName.toLowerCase().includes(normalized));
+    return trees.filter((tree) => (tree.TreeName ?? "").toLowerCase().includes(normalized));
   }, [trees, query]);
 
   const openScanner = useCallback(() => {
@@ -104,7 +104,7 @@ export default function TreeMasterScreen() {
     }
   }, []);
 
-  const openEditForm = useCallback((tree: Tree) => {
+  const openEditForm = useCallback((tree: GetTree) => {
     setEditingTree(tree);
     setClaimedTree(null);
     setSubmitError(null);
@@ -143,7 +143,7 @@ export default function TreeMasterScreen() {
     [editingTree, claimedTree, addTree, updateTree]
   );
 
-  const handleDelete = useCallback((tree: Tree) => {
+  const handleDelete = useCallback((tree: GetTree) => {
     setDeleteError(null);
     setDeletingTree(tree);
   }, []);
@@ -168,7 +168,7 @@ export default function TreeMasterScreen() {
   const closeQr = useCallback(() => setQrTree(null), []);
 
   const handleRevert = useCallback(
-    async (tree: Tree) => {
+    async (tree: GetTree) => {
       setActionError(null);
       setRevertingId(tree.ID);
       try {
@@ -185,7 +185,7 @@ export default function TreeMasterScreen() {
   );
 
   const renderItem = useCallback(
-    ({ item, index }: { item: Tree; index: number }) => (
+    ({ item, index }: { item: GetTree; index: number }) => (
       <Animated.View
         entering={FadeInRight.delay(Math.min(index, 8) * 60)
           .duration(320)
