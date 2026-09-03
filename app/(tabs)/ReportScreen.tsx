@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -234,6 +235,7 @@ export default function ReportScreen() {
   const [isOffline, setIsOffline] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
+  const hasLoadedOnce = useRef(false);
 
   const load = useCallback(async (mode: "initial" | "refresh") => {
     if (mode === "refresh") setIsRefreshing(true);
@@ -256,9 +258,17 @@ export default function ReportScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    load("initial");
-  }, [load]);
+  // Refetched every time the tab is entered: a row's scan state changes on the
+  // scan and tree-master screens, so a report left sitting in the background
+  // is stale by the time it comes back into view. The first visit shows the
+  // full-screen loader; later visits keep the current list on screen and show
+  // the pull-to-refresh spinner while the new rows land.
+  useFocusEffect(
+    useCallback(() => {
+      load(hasLoadedOnce.current ? "refresh" : "initial");
+      hasLoadedOnce.current = true;
+    }, [load])
+  );
 
   const refresh = useCallback(() => load("refresh"), [load]);
 
