@@ -77,13 +77,22 @@ export default function HomeScreen() {
               <Text style={styles.greeting}>Hello, {username ?? "there"}</Text>
               <Text style={styles.headerTitle}>Tree Management</Text>
             </View>
-            <Pressable
-              onPress={handleLogout}
-              style={styles.logoutButton}
-              hitSlop={10}
-            >
-              <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => router.push("/tree-map")}
+                style={styles.headerIconButton}
+                hitSlop={10}
+              >
+                <Ionicons name="map-outline" size={20} color="#FFFFFF" />
+              </Pressable>
+              <Pressable
+                onPress={handleLogout}
+                style={styles.headerIconButton}
+                hitSlop={10}
+              >
+                <Ionicons name="log-out-outline" size={22} color="#FFFFFF" />
+              </Pressable>
+            </View>
           </Animated.View>
 
           <Animated.View
@@ -199,7 +208,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 2,
   },
-  logoutButton: {
+  headerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerIconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,

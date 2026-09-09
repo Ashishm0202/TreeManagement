@@ -71,6 +71,15 @@ const glassSupport = detectGlassSupport();
  */
 export const isGlassTabBar = glassSupport.enabled;
 
+/**
+ * Fixed content height of the custom tab bar in `(tabs)/_layout.tsx`, before
+ * the bottom safe-area inset is added. Shared with {@link useTabBarClearance}
+ * so it can compute the bar's total height without depending on React
+ * Navigation's `useBottomTabBarHeight` (incompatible with Expo Router as of
+ * SDK 56).
+ */
+export const TAB_BAR_HEIGHT = 64;
+
 if (__DEV__) {
   console.log(`[tab bar] ${glassSupport.reason}`);
 }

@@ -1,6 +1,6 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { isGlassTabBar } from "@/constants/liquidGlass";
+import { isGlassTabBar, TAB_BAR_HEIGHT } from "@/constants/liquidGlass";
 
 /**
  * Distance from the bottom of the screen that must be kept clear of the tab
@@ -15,6 +15,7 @@ import { isGlassTabBar } from "@/constants/liquidGlass";
  * @param base Offset the screen uses when the bar is not floating.
  */
 export function useTabBarClearance(base: number): number {
-  const tabBarHeight = useBottomTabBarHeight();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
   return isGlassTabBar ? Math.max(base, tabBarHeight + 24) : base;
 }

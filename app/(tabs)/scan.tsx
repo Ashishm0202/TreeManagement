@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { useIsFocused } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -115,13 +115,13 @@ export default function ScanScreen() {
     <View style={styles.container}>
       {permission?.granted && isFocused ? (
         <CameraView
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           facing="back"
           barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
           onBarcodeScanned={handleBarcodeScanned}
         />
       ) : permission?.granted ? (
-        <View style={StyleSheet.absoluteFillObject} />
+        <View style={StyleSheet.absoluteFill} />
       ) : (
         <View style={styles.permissionState}>
           <Ionicons name="camera-outline" size={48} color="#FFFFFF" />
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   backButtonText: { fontSize: 13, fontWeight: "700", color: Colors.text },
   webview: { flex: 1, backgroundColor: Colors.surface },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     top: 60,
     backgroundColor: Colors.surface,
     alignItems: "center",

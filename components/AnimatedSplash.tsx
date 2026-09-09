@@ -943,20 +943,20 @@ function BurstLeaf({
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.background,
     zIndex: 100,
     overflow: "hidden",
   },
   curtain: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.background,
   },
   wash: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.background,
   },
-  layer: { ...StyleSheet.absoluteFillObject },
+  layer: { ...StyleSheet.absoluteFill },
   anchored: { position: "absolute" },
   // Anchored at the soil line so everything grows up out of the ground rather
   // than scaling outward from its own centre.

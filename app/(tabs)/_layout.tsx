@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/colors";
-import { isGlassTabBar } from "@/constants/liquidGlass";
+import { isGlassTabBar, TAB_BAR_HEIGHT } from "@/constants/liquidGlass";
 
 export default function TabsLayout() {
   const pathname = usePathname();
@@ -85,6 +85,17 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="tree-map"
+          options={{
+            title: "Map",
+            // Reached from an icon on the Home and Tree Master screens
+            // instead of a tab item. Unlike `scan`'s tabBarButton: () => null
+            // below, `href: null` drops it from the tab bar layout entirely
+            // rather than leaving an empty flex slot in its place.
+            href: null,
+          }}
+        />
+        <Tabs.Screen
           name="scan"
           options={{
             // Rendered as a floating center button below instead of a
@@ -134,7 +145,6 @@ export default function TabsLayout() {
   );
 }
 
-const TAB_BAR_HEIGHT = 64;
 const SCAN_BUTTON_OFFSET = 30;
 
 const styles = StyleSheet.create({

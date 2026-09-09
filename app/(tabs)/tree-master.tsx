@@ -1,5 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -212,11 +213,20 @@ export default function TreeMasterScreen() {
         style={styles.header}
       >
         <SafeAreaView edges={["top"]}>
-          <Animated.View entering={FadeInDown.duration(450)}>
-            <Text style={styles.headerTitle}>Tree Master</Text>
-            <Text style={styles.headerSubtitle}>
-              {trees.length} {trees.length === 1 ? "tree" : "trees"} registered
-            </Text>
+          <Animated.View entering={FadeInDown.duration(450)} style={styles.headerRow}>
+            <View>
+              <Text style={styles.headerTitle}>Tree Master</Text>
+              <Text style={styles.headerSubtitle}>
+                {trees.length} {trees.length === 1 ? "tree" : "trees"} registered
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => router.push("/tree-map")}
+              style={styles.headerIconButton}
+              hitSlop={10}
+            >
+              <Ionicons name="map-outline" size={20} color="#FFFFFF" />
+            </Pressable>
           </Animated.View>
 
           <View style={styles.searchBar}>
@@ -387,8 +397,21 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   headerTitle: { color: "#FFFFFF", fontSize: 24, fontWeight: "700", marginTop: 8 },
   headerSubtitle: { color: "rgba(255,255,255,0.85)", fontSize: 13, marginTop: 2 },
+  headerIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -455,7 +478,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   lookupOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(15, 30, 20, 0.45)",
     alignItems: "center",
     justifyContent: "center",
