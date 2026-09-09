@@ -30,7 +30,7 @@ const config = {
     package: "com.aondigicon.TreeManagement",
     config: {
       googleMaps: {
-        apiKey: "AIzaSyCj3ut6Pp8PTglH6Tx1KNPgZO1_tW5D614",
+        apiKey: "GoogleApiSecretKey",
       },
     },
   },
